@@ -46,3 +46,22 @@ ZOOM_MEETING_PASSWORD
 4. Deploy with the default settings.
 
 Registrations are not persisted on Vercel unless you connect external storage. The registration form still works for the live Zoom handoff.
+
+## Store registrations in Google Sheets
+
+The `/api/register` endpoint can append each submission into a Google Sheet.
+
+1. Create a Google Sheet and add a tab named `Registrations` (or set a custom tab name via env var).
+2. Create a Google Cloud project and enable the **Google Sheets API**.
+3. Create a **Service Account** and generate a JSON key.
+4. Share your Google Sheet with the service account email (Editor access).
+5. Set these Vercel environment variables:
+
+```bash
+GOOGLE_SHEET_ID=your_spreadsheet_id
+GOOGLE_SHEET_TAB=Registrations
+GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```
+
+Stored columns (in order): `createdAt`, `id`, `fullName`, `email`, `phone`, `workshopStartsAt`, `ip`, `userAgent`.

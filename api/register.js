@@ -8,6 +8,8 @@ const {
   sendJson
 } = require('../lib/vercel-api');
 
+const { appendRegistrationRow, isSheetsConfigured } = require('../lib/google-sheets');
+
 module.exports = async function registerHandler(req, res) {
   if (req.method !== 'POST') {
     sendJson(res, 405, { error: 'Method not allowed' });
@@ -35,15 +37,36 @@ module.exports = async function registerHandler(req, res) {
       workshopStartsAt: status.startsAt
     };
 
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    const userAgent = String(req.headers['user-agent'] || '').trim();
+
+    let stored = false;
+    let storageNote = 'Registrations are not persisted unless Google Sheets is configured.';
+
+    if (isSheetsConfigured()) {
+      await appendRegistrationRow([
+        entry.createdAt,
+        entry.id,
+        entry.fullName,
+        entry.email,
+        entry.phone,
+        entry.workshopStartsAt,
+        ip,
+        userAgent
+      ]);
+      stored = true;
+      storageNote = 'Stored in Google Sheets.';
+    }
+
     sendJson(res, 200, {
       ok: true,
-      stored: false,
+      stored,
       status,
       registration: entry,
       meetingNumber: ZOOM_MEETING_ID,
       meetingPassword: ZOOM_MEETING_PASSWORD,
       sdkReady: Boolean(ZOOM_SDK_KEY && ZOOM_SDK_SECRET),
-      storageNote: 'Vercel serverless functions are stateless, so registrations are not persisted without external storage.'
+      storageNote
     });
   } catch (error) {
     sendJson(res, 400, { error: error.message || 'Unable to process registration.' });
