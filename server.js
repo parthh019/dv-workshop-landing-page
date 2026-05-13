@@ -80,6 +80,13 @@ function getWorkshopStatus() {
 }
 
 async function ensureStorage() {
+  // In serverless environments (Vercel) the filesystem is ephemeral
+  // and may be read-only. Skip creating files there and use an
+  // in-memory fallback instead.
+  if (process.env.VERCEL) {
+    return;
+  }
+
   await fs.mkdir(DATA_DIR, { recursive: true });
   try {
     await fs.access(REGISTRATIONS_FILE);
@@ -89,6 +96,10 @@ async function ensureStorage() {
 }
 
 async function readRegistrations() {
+  if (process.env.VERCEL) {
+    return global.__DV_REGISTRATIONS || [];
+  }
+
   await ensureStorage();
   const raw = await fs.readFile(REGISTRATIONS_FILE, 'utf8');
   try {
@@ -100,6 +111,13 @@ async function readRegistrations() {
 }
 
 async function writeRegistration(entry) {
+  if (process.env.VERCEL) {
+    const arr = global.__DV_REGISTRATIONS || [];
+    arr.push(entry);
+    global.__DV_REGISTRATIONS = arr;
+    return;
+  }
+
   const registrations = await readRegistrations();
   registrations.push(entry);
   await fs.writeFile(REGISTRATIONS_FILE, JSON.stringify(registrations, null, 2), 'utf8');
