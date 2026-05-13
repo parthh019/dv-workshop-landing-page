@@ -47,31 +47,45 @@ ZOOM_MEETING_PASSWORD
 
 Registrations are stored in Vercel Postgres when `DATABASE_URL` is configured in your Vercel project. If no database is configured, the serverless function keeps registrations in-memory (ephemeral) for short-term access.
 
-## Store registrations in Vercel Postgres
+## Store registrations in Google Sheets via Apps Script
 
-1. In the Vercel dashboard, add a Vercel Postgres database and note the `DATABASE_URL`.
-2. Set the `DATABASE_URL` environment variable in your Vercel project settings.
-3. Run the following SQL once (via psql or Vercel SQL editor) to create the table:
+You can collect name, email, phone and date directly into a Google Sheet using a small Apps Script web app. Set the script's deployment URL in Vercel as `GOOGLE_APPS_SCRIPT_URL`.
 
-```sql
-CREATE TABLE registrations (
-	id TEXT PRIMARY KEY,
-	full_name TEXT,
-	email TEXT,
-	phone TEXT,
-	created_at TIMESTAMP WITH TIME ZONE,
-	workshop_starts_at TIMESTAMP WITH TIME ZONE,
-	ip TEXT,
-	user_agent TEXT
-);
+Apps Script snippet (paste into the Apps Script editor for your sheet):
+
+```javascript
+function doPost(e) {
+	try {
+		var data = {};
+		if (e.postData && e.postData.contents) {
+			data = JSON.parse(e.postData.contents);
+		} else if (e.parameter) {
+			data.fullName = e.parameter.fullName;
+			data.email = e.parameter.email;
+			data.phone = e.parameter.phone;
+			data.date = e.parameter.date;
+		}
+
+		var ss = SpreadsheetApp.getActiveSpreadsheet();
+		var sheet = ss.getSheetByName('Registrations');
+		if (!sheet) {
+			sheet = ss.insertSheet('Registrations');
+			sheet.appendRow(['Date','Full Name','Email','Phone']);
+		}
+
+		var row = [data.date || new Date().toISOString(), data.fullName || '', data.email || '', data.phone || ''];
+		sheet.appendRow(row);
+
+		return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+	} catch (err) {
+		return ContentService.createTextOutput(JSON.stringify({ error: err.message })).setMimeType(ContentService.MimeType.JSON);
+	}
+}
 ```
 
-4. After deployment, form submissions will be appended to the `registrations` table.
+Steps:
+1. Open your Google Sheet → Extensions → Apps Script.
+2. Replace the default code with the snippet above, save, and Deploy → New deployment → Select "Web app" and set access to "Anyone" (or "Anyone with link"). Copy the Web App URL.
+3. In Vercel, set `GOOGLE_APPS_SCRIPT_URL` to the Web App URL.
 
-To export data as CSV from Postgres, use a SQL client or the Vercel Postgres UI to run:
-
-```sql
-COPY (SELECT * FROM registrations ORDER BY created_at DESC) TO STDOUT WITH CSV HEADER;
-```
-
-Stored columns (in order): `id`, `full_name`, `email`, `phone`, `created_at`, `workshop_starts_at`, `ip`, `user_agent`.
+After deployment, form submissions will be forwarded to the Apps Script and appended to the `Registrations` tab.

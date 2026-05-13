@@ -8,7 +8,8 @@ const {
   sendJson
 } = require('../lib/vercel-api');
 
-const { insertRegistration, isDbConfigured } = require('../lib/db');
+// Google Apps Script URL (set this in Vercel env vars to enable storing in Sheets)
+const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL || '';
 
 module.exports = async function registerHandler(req, res) {
   if (req.method !== 'POST') {
@@ -37,22 +38,41 @@ module.exports = async function registerHandler(req, res) {
       workshopStartsAt: status.startsAt
     };
 
-    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-    const userAgent = String(req.headers['user-agent'] || '').trim();
-
     let stored = false;
-    let storageNote = 'Registrations are not persisted unless a database is configured.';
+    let storageNote = 'Registrations are kept in-memory (ephemeral). Set GOOGLE_APPS_SCRIPT_URL to persist to Google Sheets.';
 
-    if (isDbConfigured()) {
-      await insertRegistration(entry, ip, userAgent);
-      stored = true;
-      storageNote = 'Stored in Vercel Postgres.';
+    if (GOOGLE_APPS_SCRIPT_URL) {
+      try {
+        // send minimal data: name, email, phone, date
+        const payload = {
+          fullName: entry.fullName,
+          email: entry.email,
+          phone: entry.phone,
+          date: entry.createdAt
+        };
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          // prevent function from waiting too long
+          // Note: Vercel will handle timeouts; keep simple
+        });
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => '');
+          storageNote = `Failed to store in Google Sheets: ${response.status} ${text}`;
+        } else {
+          stored = true;
+          storageNote = 'Stored in Google Sheets via Apps Script.';
+        }
+      } catch (err) {
+        storageNote = `Error sending to Apps Script: ${err.message}`;
+      }
     } else if (process.env.VERCEL) {
-      // keep in-memory fallback on Vercel for short-term access
       const arr = global.__DV_REGISTRATIONS || [];
       arr.push(entry);
       global.__DV_REGISTRATIONS = arr;
-      storageNote = 'Stored in-memory (ephemeral). Configure DATABASE_URL for persistent storage.';
     }
 
     sendJson(res, 200, {
