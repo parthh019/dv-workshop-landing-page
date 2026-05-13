@@ -1,4 +1,4 @@
-const { getWorkshopStatus, sendJson } = require('./_shared');
+const { getWorkshopStatus, sendJson } = require('../lib/vercel-api');
 
 module.exports = function statusHandler(req, res) {
   if (req.method !== 'GET') {

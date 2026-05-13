@@ -1,4 +1,4 @@
-const { createZoomSignature, readJsonBody, sendJson, ZOOM_SDK_KEY } = require('./_shared');
+const { createZoomSignature, readJsonBody, sendJson, ZOOM_SDK_KEY } = require('../lib/vercel-api');
 
 module.exports = async function signatureHandler(req, res) {
   if (req.method !== 'POST') {

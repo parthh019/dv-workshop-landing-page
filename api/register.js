@@ -6,7 +6,7 @@ const {
   getWorkshopStatus,
   readJsonBody,
   sendJson
-} = require('./_shared');
+} = require('../lib/vercel-api');
 
 module.exports = async function registerHandler(req, res) {
   if (req.method !== 'POST') {
