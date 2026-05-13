@@ -27,6 +27,12 @@ async function getSignature(meetingNumber, role) {
     body: JSON.stringify({ meetingNumber, role })
   });
 
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await response.text();
+    throw new Error(`Unable to generate a Zoom signature (${response.status}). ${text || 'No response body.'}`);
+  }
+
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || 'Unable to generate a Zoom signature.');

@@ -106,10 +106,18 @@ registrationForm.addEventListener('submit', async (event) => {
       body: JSON.stringify({ fullName, email, phone })
     });
 
-    const result = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let result = null;
+
+    if (contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error(`Registration failed (${response.status}). ${text || 'No response body.'}`);
+    }
 
     if (!response.ok) {
-      throw new Error(result.error || 'Registration failed');
+      throw new Error(result?.error || `Registration failed (${response.status})`);
     }
 
     if (result.status && result.status.isLive) {
