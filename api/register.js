@@ -8,7 +8,7 @@ const {
   sendJson
 } = require('../lib/vercel-api');
 
-const { appendRegistrationRow, isSheetsConfigured } = require('../lib/google-sheets');
+const { insertRegistration, isDbConfigured } = require('../lib/db');
 
 module.exports = async function registerHandler(req, res) {
   if (req.method !== 'POST') {
@@ -41,21 +41,18 @@ module.exports = async function registerHandler(req, res) {
     const userAgent = String(req.headers['user-agent'] || '').trim();
 
     let stored = false;
-    let storageNote = 'Registrations are not persisted unless Google Sheets is configured.';
+    let storageNote = 'Registrations are not persisted unless a database is configured.';
 
-    if (isSheetsConfigured()) {
-      await appendRegistrationRow([
-        entry.createdAt,
-        entry.id,
-        entry.fullName,
-        entry.email,
-        entry.phone,
-        entry.workshopStartsAt,
-        ip,
-        userAgent
-      ]);
+    if (isDbConfigured()) {
+      await insertRegistration(entry, ip, userAgent);
       stored = true;
-      storageNote = 'Stored in Google Sheets.';
+      storageNote = 'Stored in Vercel Postgres.';
+    } else if (process.env.VERCEL) {
+      // keep in-memory fallback on Vercel for short-term access
+      const arr = global.__DV_REGISTRATIONS || [];
+      arr.push(entry);
+      global.__DV_REGISTRATIONS = arr;
+      storageNote = 'Stored in-memory (ephemeral). Configure DATABASE_URL for persistent storage.';
     }
 
     sendJson(res, 200, {

@@ -45,23 +45,33 @@ ZOOM_MEETING_PASSWORD
 
 4. Deploy with the default settings.
 
-Registrations are not persisted on Vercel unless you connect external storage. The registration form still works for the live Zoom handoff.
+Registrations are stored in Vercel Postgres when `DATABASE_URL` is configured in your Vercel project. If no database is configured, the serverless function keeps registrations in-memory (ephemeral) for short-term access.
 
-## Store registrations in Google Sheets
+## Store registrations in Vercel Postgres
 
-The `/api/register` endpoint can append each submission into a Google Sheet.
+1. In the Vercel dashboard, add a Vercel Postgres database and note the `DATABASE_URL`.
+2. Set the `DATABASE_URL` environment variable in your Vercel project settings.
+3. Run the following SQL once (via psql or Vercel SQL editor) to create the table:
 
-1. Create a Google Sheet and add a tab named `Registrations` (or set a custom tab name via env var).
-2. Create a Google Cloud project and enable the **Google Sheets API**.
-3. Create a **Service Account** and generate a JSON key.
-4. Share your Google Sheet with the service account email (Editor access).
-5. Set these Vercel environment variables:
-
-```bash
-GOOGLE_SHEET_ID=your_spreadsheet_id
-GOOGLE_SHEET_TAB=Registrations
-GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```sql
+CREATE TABLE registrations (
+	id TEXT PRIMARY KEY,
+	full_name TEXT,
+	email TEXT,
+	phone TEXT,
+	created_at TIMESTAMP WITH TIME ZONE,
+	workshop_starts_at TIMESTAMP WITH TIME ZONE,
+	ip TEXT,
+	user_agent TEXT
+);
 ```
 
-Stored columns (in order): `createdAt`, `id`, `fullName`, `email`, `phone`, `workshopStartsAt`, `ip`, `userAgent`.
+4. After deployment, form submissions will be appended to the `registrations` table.
+
+To export data as CSV from Postgres, use a SQL client or the Vercel Postgres UI to run:
+
+```sql
+COPY (SELECT * FROM registrations ORDER BY created_at DESC) TO STDOUT WITH CSV HEADER;
+```
+
+Stored columns (in order): `id`, `full_name`, `email`, `phone`, `created_at`, `workshop_starts_at`, `ip`, `user_agent`.
