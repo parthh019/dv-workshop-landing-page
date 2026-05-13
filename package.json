@@ -4,6 +4,6 @@
   "private": true,
   "description": "Glassmorphism landing page for the DV Analytics workshop",
   "scripts": {
-    "start": "node server.js"
+    "dev": "node server.js"
   }
 }
