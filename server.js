@@ -343,13 +343,23 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'Not found' }));
 });
 
-ensureStorage()
-  .then(() => {
-    server.listen(PORT, () => {
-      console.log(`DV Workshop Landing Page running at http://localhost:${PORT}`);
+// Only start the long-running server when this file is executed directly
+// (e.g., `node server.js` for local development). In serverless environments
+// like Vercel the file may be present but should not attempt to listen or
+// initialize local filesystem storage.
+if (require.main === module && !process.env.VERCEL) {
+  ensureStorage()
+    .then(() => {
+      server.listen(PORT, () => {
+        console.log(`DV Workshop Landing Page running at http://localhost:${PORT}`);
+      });
+    })
+    .catch((error) => {
+      console.error('Failed to initialize storage:', error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    console.error('Failed to initialize storage:', error);
-    process.exit(1);
-  });
+} else {
+  // When required as a module (or running on Vercel), export handlers for tests
+  // or let the serverless functions serve static files without initializing.
+  module.exports = { server, ensureStorage, readRegistrations, writeRegistration };
+}
