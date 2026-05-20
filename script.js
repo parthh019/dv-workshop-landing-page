@@ -28,6 +28,14 @@ function openModal() {
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Smooth scroll to the form
+  setTimeout(() => {
+    const modalCard = modal.querySelector('.modal-card');
+    if (modalCard) {
+      modalCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
 }
 
 function closeModal() {

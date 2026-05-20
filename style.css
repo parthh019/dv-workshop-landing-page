@@ -423,6 +423,33 @@ input {
   z-index: 1;
 }
 
+/* Make form scrollable on small devices */
+@media (max-height: 800px) {
+  .modal-card {
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .modal-card::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal-card::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .modal-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 106, 26, 0.5);
+    border-radius: 10px;
+  }
+
+  .modal-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 106, 26, 0.7);
+  }
+}
+
 .close-btn {
   position: absolute;
   top: 18px;
