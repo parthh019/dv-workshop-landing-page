@@ -22,6 +22,7 @@ module.exports = async function registerHandler(req, res) {
     const fullName = String(body.fullName || '').trim();
     const email = String(body.email || '').trim();
     const phone = String(body.phone || '').trim();
+    const workshopName = String(body.workshopName || '').trim();
 
     if (!fullName || !email || !phone) {
       sendJson(res, 400, { error: 'Full name, email, and phone number are required.' });
@@ -34,6 +35,7 @@ module.exports = async function registerHandler(req, res) {
       fullName,
       email,
       phone,
+      workshopName,
       createdAt: new Date().toISOString(),
       workshopStartsAt: status.startsAt
     };
@@ -43,11 +45,12 @@ module.exports = async function registerHandler(req, res) {
 
     if (GOOGLE_APPS_SCRIPT_URL) {
       try {
-        // send minimal data: name, email, phone, date
+        // send minimal data: name, email, phone, workshop name, date
         const payload = {
           fullName: entry.fullName,
           email: entry.email,
           phone: entry.phone,
+          workshopName: entry.workshopName,
           date: entry.createdAt
         };
 

@@ -485,6 +485,18 @@ input {
   width: 100%;
 }
 
+.form-instruction {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: rgba(255, 106, 26, 0.15);
+  border: 1px solid rgba(255, 106, 26, 0.35);
+  border-radius: 12px;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: rgba(243, 247, 255, 0.85);
+  font-weight: 500;
+}
+
 .form-feedback {
   min-height: 24px;
   color: rgba(243, 247, 255, 0.8);

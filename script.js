@@ -8,6 +8,9 @@ const modalMessage = document.getElementById('modalMessage');
 const waitingPopup = document.getElementById('waitingPopup');
 const waitingPopupCopy = document.getElementById('waitingPopupCopy');
 
+// Configuration for workshop name
+const WORKSHOP_NAME = 'Power BI';
+
 let modalHideTimer = null;
 let waitPollTimer = null;
 
@@ -16,6 +19,9 @@ function openModal() {
     clearTimeout(modalHideTimer);
     modalHideTimer = null;
   }
+
+  // Set workshop name in the form
+  document.getElementById('workshopName').value = WORKSHOP_NAME;
 
   closeWaitingPopup();
   modal.classList.remove('hidden');
@@ -58,6 +64,18 @@ async function loadStatus() {
   return response.json();
 }
 
+// Email validation
+function isValidEmail(email) {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+}
+
+// Phone validation (10 digits only)
+function isValidPhone(phone) {
+  const phoneRegex = /^[0-9]{10}$/;
+  return phoneRegex.test(phone);
+}
+
 joinButtons.forEach((button) => {
   button.addEventListener('click', (event) => {
     event.preventDefault();
@@ -93,6 +111,16 @@ registrationForm.addEventListener('submit', async (event) => {
     return;
   }
 
+  if (!isValidEmail(email)) {
+    formFeedback.textContent = 'Please enter a valid email address.';
+    return;
+  }
+
+  if (!isValidPhone(phone)) {
+    formFeedback.textContent = 'Please enter a valid 10-digit phone number.';
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
   formFeedback.textContent = '';
@@ -103,7 +131,7 @@ registrationForm.addEventListener('submit', async (event) => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ fullName, email, phone })
+      body: JSON.stringify({ fullName, email, phone, workshopName: WORKSHOP_NAME })
     });
 
     const contentType = response.headers.get('content-type') || '';

@@ -4,6 +4,7 @@ function doPost(e) {
     var fullName = (payload.fullName || '').toString().trim();
     var email = (payload.email || '').toString().trim();
     var phone = (payload.phone || '').toString().trim();
+    var workshopName = (payload.workshopName || '').toString().trim();
     var dateValue = payload.date || new Date().toISOString();
 
     if (!fullName || !email || !phone) {
@@ -16,11 +17,16 @@ function doPost(e) {
     var sheet = getOrCreateSheet_('Registrations');
     ensureHeaders_(sheet);
 
+    // Format date as DD-MM-YYYY (date only, without time)
+    var dateObj = new Date(dateValue);
+    var formattedDate = formatDateDDMMYYYY_(dateObj);
+
     sheet.appendRow([
-      dateValue,
+      formattedDate,
       fullName,
       email,
-      phone
+      phone,
+      workshopName
     ]);
 
     return jsonResponse_({
@@ -65,7 +71,7 @@ function getOrCreateSheet_(sheetName) {
 }
 
 function ensureHeaders_(sheet) {
-  var headers = ['Date', 'Full Name', 'Email', 'Phone'];
+  var headers = ['Date', 'Full Name', 'Email', 'Phone', 'Workshop Name'];
   var firstRow = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
   var isEmpty = firstRow.every(function(cell) {
     return String(cell || '').trim() === '';
@@ -80,4 +86,11 @@ function jsonResponse_(obj, statusCode) {
   var output = ContentService.createTextOutput(JSON.stringify(obj));
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
+}
+
+function formatDateDDMMYYYY_(dateObj) {
+  var day = String(dateObj.getDate()).padStart(2, '0');
+  var month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  var year = dateObj.getFullYear();
+  return day + '-' + month + '-' + year;
 }

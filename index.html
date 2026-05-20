@@ -53,18 +53,24 @@
         </p>
       </div>
 
+      <p class="form-instruction">To claim your post workshop certificate please fill your details correctly.</p>
+
       <form id="registrationForm" class="register-form">
+        <label>
+          <span>Workshop Name</span>
+          <input type="text" id="workshopName" name="workshopName" placeholder="Workshop Name" disabled readonly>
+        </label>
         <label>
           <span>Full Name</span>
           <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" autocomplete="name" required>
         </label>
         <label>
           <span>Email ID</span>
-          <input type="email" id="email" name="email" placeholder="Enter your email address" autocomplete="email" required>
+          <input type="email" id="email" name="email" placeholder="Enter your email address" autocomplete="email" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" required>
         </label>
         <label>
           <span>Phone Number</span>
-          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" autocomplete="tel" required>
+          <input type="tel" id="phone" name="phone" placeholder="Enter your 10-digit phone number" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required>
         </label>
 
         <button type="submit" class="primary-btn form-btn" id="submitBtn">Submit & Continue</button>
