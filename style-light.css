@@ -348,6 +348,18 @@ input {
   display: grid;
   gap: 14px;
   margin-top: 20px;
+  max-height: min(62vh, 440px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.register-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.register-form::-webkit-scrollbar-thumb {
+  background: rgba(18, 32, 51, 0.25);
+  border-radius: 999px;
 }
 
 .register-form label {
